@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const objectId= mongoose.Schema.Types.ObjectId
 
 const taskSchema = new mongoose.Schema({
   taskName: {
@@ -9,11 +10,20 @@ const taskSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  userId: {
+    type:objectId,
+    ref:"user",
+    required:true
+},
   status: {
     type: String,
     enum: ["pending", "completed"],
     default: "pending",
   },
+  isDeleted: {
+    type:Boolean,
+    default: false
+  }
 });
 
 
