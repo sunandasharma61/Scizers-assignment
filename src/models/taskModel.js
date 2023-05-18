@@ -12,7 +12,7 @@ const taskSchema = new mongoose.Schema({
   },
   userId: {
     type:objectId,
-    ref:"user",
+    ref:"User",
     required:true
 },
   status: {

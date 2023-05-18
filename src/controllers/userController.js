@@ -1,21 +1,21 @@
 const userModel = require("../models/userModel");
 
-const isEmpty = function (value) {
-  if (typeof value === "undefined" || value === null) return false;
-  return true;
-};
+//============== Create User =========================
 const createUser = async function (req, res) {
   try {
-    let data = req.body;
-    const name = data;
-    if (!isEmpty(name)) {
+    const { userName } = req.body;
+    if (!userName) {
       return res
         .status(400)
-        .send({ status: "false", message: "Name must be present" });
+        .send({ status: "false", message: "User name must be present" });
     }
-
-    const userCreated = await userModel.create(data);
-    return res.status(201).send({ status: "true", data: userCreated });
+    const existingUser = await userModel.findOne({ userName });
+    if (existingUser) {
+      res.status(409).send("Username already exists");
+      return;
+    }
+    const userCreated = await userModel.create({ userName });
+    return res.status(201).send({ status: "true", user: userCreated });
   } catch (error) {
     return res.status(500).send({ status: "false", message: error.message });
   }

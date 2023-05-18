@@ -67,13 +67,27 @@ const getTask = async function (req, res) {
 //============= Delete Task ==============
 const deleteTask = async function (req, res) {
   try {
+    const userId = req.params.userId;
     const taskId = req.params.taskId;
+    if (!isValidObjectId(userId)) {
+      return res
+        .status(404)
+        .send({ status: false, message: "User id is not valid" });
+    }
     if (!isValidObjectId(taskId)) {
       return res
         .status(404)
         .send({ status: false, message: "Task id is not valid" });
     }
+
     const checkTaskId = await taskModel.findById(taskId);
+    if (String(userId) !== String(checkTaskId.userId)) {
+      console.log(String(userId));
+
+      return res
+        .status(403)
+        .send({ status: false, message: "User is not authorized" });
+    }
     if (!checkTaskId || checkTaskId.isDeleted == true) {
       return res
         .status(404)
@@ -90,4 +104,85 @@ const deleteTask = async function (req, res) {
     return res.status(500).send({ status: false, message: error.message });
   }
 };
-module.exports = { createTask, getTask, deleteTask };
+
+//============= Update Task ==============
+const updateTask = async function (req, res) {
+  try {
+    let data = req.body;
+    let { taskName, dueDate, status } = data;
+    const userId = req.params.userId;
+    const taskId = req.params.taskId;
+
+    if (!isValidObjectId(userId)) {
+      return res
+        .status(404)
+        .send({ status: false, message: "User id is not valid" });
+    }
+    if (!isValidObjectId(taskId)) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Task id is not valid" });
+    }
+    const checkTaskId = await taskModel.findById(taskId);
+    console.log(checkTaskId);
+    if (String(userId) !== String(checkTaskId.userId)) {
+      console.log(String(userId));
+
+      return res
+        .status(403)
+        .send({ status: false, message: "User is not authorized" });
+    }
+
+    const existTask = await taskModel.findOne({
+      _id: taskId,
+      isDeleted: false,
+    });
+    if (!existTask) {
+      return res
+        .status(404)
+        .send({ status: false, message: " No task found with given id." });
+    }
+
+    const checktaskName = await taskModel.findOne({ taskName: data.taskName });
+    if (checktaskName) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Task is already present." });
+    }
+
+    const checkdueDate = await taskModel.findOne({ dueDate: data.dueDate });
+    if (checkdueDate) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Due date is already present." });
+    }
+    // Validate the status field
+    if (status !== "pending" && status !== "completed") {
+      return res.status(400).send({
+        status: false,
+        message:
+          "Invalid status. Status must be either 'pending' or 'completed'.",
+      });
+    }
+
+    const updateTask = await taskModel.findOneAndUpdate(
+      { _id: taskId },
+      {
+        $set: {
+          taskName: data.taskName,
+          dueDate: data.dueDate,
+          status: data.status,
+        },
+      },
+      { new: true }
+    );
+
+    return res
+      .status(200)
+      .send({ status: true, message: "Success", data: updateTask });
+  } catch (error) {
+    return res.status(500).send({ status: false, message: error.message });
+  }
+};
+
+module.exports = { createTask, getTask, deleteTask, updateTask };

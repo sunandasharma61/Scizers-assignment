@@ -8,9 +8,11 @@ router.post("/user", userController.createUser);
 
 router.post("/task", taskController.createTask);
 router.get("/tasks", taskController.getTask);
-router.delete("/tasks/:taskId", taskController.deleteTask)
+router.delete("/tasks/:userId/:taskId", taskController.deleteTask);
+router.put("/task/:userId/:taskId", taskController.updateTask);
 
+router.all("/*", function (req, res) {
+  res.status(400).send({ status: false, message: "Invalid HTTP Request" });
+});
 
-
-
-module.exports=router;
+module.exports = router;
